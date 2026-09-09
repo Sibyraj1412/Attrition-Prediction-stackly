@@ -17,7 +17,7 @@ Employee turnover affects cost, productivity, knowledge retention, and team stab
 The sample contains 50 employees and includes Employee ID, name, department, job title, email, phone, location, joining date, and employment status.
 
 ## 5. Method
-This prototype uses a weighted rule-based heuristic, not machine learning, because the workbook has no historical Attrition Yes/No outcome.
+This prototype uses a scikit-learn Logistic Regression pipeline. Because the sample workbook has no historical Attrition Yes/No outcome, it uses clearly labeled demo targets generated from the original screening rules. A workbook with real historical labels is required for a validated model.
 
 Rules include:
 - Under 1 year tenure: +35
@@ -28,9 +28,9 @@ Rules include:
 - Sales or Customer Success: +10
 
 Risk levels:
-- 0-29: Low
-- 30-54: Medium
-- 55-100: High
+- 0-29%: Low
+- 30-59%: Medium
+- 60-100%: High
 
 ## 6. Current sample result
 - High: 2 employees
@@ -63,8 +63,9 @@ flowchart LR
 
 ## 9. Limitations
 - No historical attrition target.
-- No trained or validated ML model.
-- Score is not a probability.
+- The bundled workbook has no historical attrition target, so its model uses demo labels.
+- The model is not validated on a held-out historical test set.
+- Demo probabilities are not real-world probabilities.
 - Sample is only 50 records.
 - Signals are demonstration assumptions and do not prove causation.
 

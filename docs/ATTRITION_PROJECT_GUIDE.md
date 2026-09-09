@@ -4,7 +4,7 @@
 **Version:** 1.0  
 **Application:** Streamlit  
 **Input:** `data/stackly_employee_details.xlsx`  
-**Current status:** Working prototype / explainable screening dashboard
+**Current status:** Working prototype / Logistic Regression screening dashboard
 
 ---
 
@@ -22,9 +22,7 @@ The dashboard helps a manager:
 
 ### Important technical truth
 
-The current Excel file contains employee information, but it does **not** contain a historical `Attrition` result such as `Yes` or `No`. Because of that, the current application does not train a machine-learning model. It uses a transparent, rule-based scoring method called an **explainable heuristic**.
-
-This is appropriate for a prototype demonstration. It should not be presented as a validated prediction model until historical attrition labels are collected and the model is tested against real outcomes.
+The current Excel file contains employee information, but it does **not** contain a historical `Attrition` result such as `Yes` or `No`. The application now trains a Logistic Regression pipeline using clearly labeled demo targets generated from the original screening rules. It should not be presented as a validated prediction model until real attrition labels are collected and the model is tested against real outcomes.
 
 ---
 
@@ -47,9 +45,9 @@ flowchart LR
     A[Excel workbook] --> B[Upload or bundled data]
     B --> C[Read Employee Details sheet]
     C --> D[Validate required columns]
-    D --> E[Convert joining dates]
-    E --> F[Calculate explainable risk score]
-    F --> G[Assign High Medium Low level]
+    D --> E[Convert joining dates and create features]
+    E --> F[Train Logistic Regression]
+    F --> G[Predict attrition probability]
     G --> H[Apply dashboard filters]
     H --> I[Charts and summary metrics]
     H --> J[Likely to leave table]
@@ -98,9 +96,13 @@ The email and phone fields are retained in the workbook, but they are not needed
 
 ---
 
-## 5. Current Method: Explainable Heuristic Scoring
+## 5. Current Method: Logistic Regression
 
-For each employee, the app starts with a score of zero and adds points when a risk signal is present.
+The app trains a scikit-learn `LogisticRegression` classifier. It uses scaled tenure as a numeric feature and one-hot encodes department, location, and employment status. The model returns an attrition probability between 0 and 1.
+
+If an uploaded workbook includes an `Attrition` column, values such as `Yes`, `Y`, `True`, `1`, and `Left` are treated as attrition. If the column is absent, the app creates demo labels from the original rules solely to keep the prototype runnable. Those demo labels are not historical evidence.
+
+The original rules are still used to generate the human-readable `Risk Signals` explanation beside each model result.
 
 ### Scoring rules
 
@@ -114,28 +116,24 @@ For each employee, the app starts with a score of zero and adds points when a ri
 | Department is Sales or Customer Success | +10 | `customer-facing team` |
 | No matching signal | +0 | `no elevated signals` |
 
-The final score is capped at 100.
+The model probability is multiplied by 100 and rounded to create the displayed `Risk Score`.
 
 ### Formula
 
 ```text
-Risk Score = tenure points
-           + status points
-           + location points
-           + department points
-
-Risk Score = min(Risk Score, 100)
+Attrition Probability = LogisticRegression(tenure, department, location, status)
+Risk Score = round(Attrition Probability * 100)
 ```
 
-The score is a prioritization index. It is **not** a probability that an employee will leave.
+With historical labels, the probability can be interpreted as a model estimate only after validation and calibration. With the current demo labels, it is a demonstration output and must not be interpreted as a real-world probability.
 
 ### Risk categories
 
-| Score | Dashboard level | Interpretation |
+| Probability | Dashboard level | Interpretation |
 |---:|---|---|
-| 0-29 | Low | No strong elevated signals in this prototype |
-| 30-54 | Medium | Review the employee context and consider a check-in |
-| 55-100 | High | Highest priority for human review |
+| 0-29% | Low | Lower model score |
+| 30-59% | Medium | Review the employee context and consider a check-in |
+| 60-100% | High | Highest priority for human review |
 
 ### Pseudocode
 

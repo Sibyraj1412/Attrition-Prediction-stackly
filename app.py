@@ -3,6 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 st.set_page_config(
@@ -23,6 +27,7 @@ REQUIRED_COLUMNS = {
     "Joining Date",
     "Employment Status",
 }
+MODEL_FEATURES = ["Tenure Years", "Department", "Location", "Employment Status"]
 
 st.markdown(
     """
@@ -30,15 +35,16 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
     :root { --ink: #18212b; --muted: #65717d; --teal: #087f8c; --coral: #e76f51; --cream: #f7f4ee; }
     html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; color: var(--ink); }
-    h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+    h1, h2, h3, [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2, [data-testid="stMarkdownContainer"] h3 { font-family: 'Space Grotesk', sans-serif; color: var(--ink) !important; }
+    [data-testid="stMarkdownContainer"] p, [data-testid="stCaptionContainer"] { color: var(--muted) !important; }
     .stApp { background: linear-gradient(135deg, #f7f4ee 0%, #f4f8f5 50%, #edf5f3 100%); }
     .hero { padding: 1.5rem 0 1rem; border-bottom: 1px solid #dce6e2; margin-bottom: 1.25rem; }
     .eyebrow { color: var(--coral); font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
     .hero h1 { font-size: clamp(2.1rem, 4vw, 4rem); line-height: 1; margin: .35rem 0 .6rem; }
     .hero p { color: var(--muted); max-width: 700px; font-size: 1rem; }
     .metric { background: rgba(255,255,255,.7); border: 1px solid #dce6e2; padding: 1rem 1.1rem; border-radius: 10px; min-height: 105px; }
-    .metric-label { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
-    .metric-value { font: 700 2rem 'Space Grotesk'; margin-top: .35rem; }
+    .metric-label { color: var(--muted) !important; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+    .metric-value { color: var(--ink) !important; font: 700 2rem 'Space Grotesk'; margin-top: .35rem; }
     .risk-high { color: #b23a2b; font-weight: 700; }
     .risk-medium { color: #b86b00; font-weight: 700; }
     .risk-low { color: #18715d; font-weight: 700; }
@@ -98,9 +104,53 @@ def score_employee(row):
     return pd.Series([min(score, 100), level, ", ".join(reasons) or "no elevated signals"])
 
 
-def enrich_data(workbook):
+def add_features(workbook):
     workbook = workbook.copy()
-    workbook[["Risk Score", "Risk Level", "Risk Signals"]] = workbook.apply(score_employee, axis=1)
+    workbook["Tenure Years"] = ((pd.Timestamp(date.today()) - workbook["Joining Date"]).dt.days / 365.25).clip(lower=0).fillna(0)
+    return workbook
+
+
+def train_logistic_model(workbook):
+    model_data = add_features(workbook)
+    target_source = "historical Attrition column"
+    if "Attrition" in model_data.columns:
+        target = model_data["Attrition"].astype(str).str.strip().str.lower().isin({"yes", "y", "true", "1", "left"}).astype(int)
+    else:
+        target_source = "demo labels generated from the existing screening rules"
+        target = model_data.apply(lambda row: int(score_employee(row).iloc[0] >= 30), axis=1)
+
+    if target.nunique() < 2:
+        st.error("Logistic Regression needs both attrition and non-attrition examples in the uploaded data.")
+        st.stop()
+
+    numeric_features = ["Tenure Years"]
+    categorical_features = ["Department", "Location", "Employment Status"]
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("numeric", StandardScaler(), numeric_features),
+            ("categorical", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+        ]
+    )
+    model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced")),
+        ]
+    )
+    model.fit(model_data[MODEL_FEATURES], target)
+    model_data["Attrition Probability"] = model.predict_proba(model_data[MODEL_FEATURES])[:, 1]
+    model_data["Risk Score"] = (model_data["Attrition Probability"] * 100).round().astype(int)
+    model_data["Risk Level"] = pd.cut(
+        model_data["Attrition Probability"],
+        bins=[-0.01, 0.30, 0.60, 1.01],
+        labels=["Low", "Medium", "High"],
+    ).astype(str)
+    model_data["Risk Signals"] = model_data.apply(lambda row: score_employee(row).iloc[2], axis=1)
+    return model_data, target_source
+
+
+def enrich_data(workbook):
+    workbook, _ = train_logistic_model(workbook)
     return workbook
 
 
@@ -109,7 +159,7 @@ st.markdown(
     <div class="hero">
       <div class="eyebrow">Stackly people analytics</div>
       <h1>Attrition Radar</h1>
-      <p>A clear first pass over employee records: spot elevated risk signals, inspect the people behind the number, and keep the reasoning visible.</p>
+    <p>A Logistic Regression screening dashboard: estimate attrition probability, inspect the people behind the number, and keep the reasoning visible.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -122,7 +172,7 @@ with st.sidebar:
     st.markdown("### Filters")
     st.caption("Use the controls below to narrow the employee view.")
 
-employees = enrich_data(load_employee_data(uploaded_file))
+employees, target_source = train_logistic_model(load_employee_data(uploaded_file))
 
 with st.sidebar:
     departments = st.multiselect("Department", sorted(employees["Department"].dropna().unique()), default=[])
@@ -149,13 +199,17 @@ for column, (label, value) in zip(metrics, metric_values):
         st.markdown(f'<div class="metric"><div class="metric-label">{label}</div><div class="metric-value">{value}</div></div>', unsafe_allow_html=True)
 
 st.write("")
-st.markdown('<div class="note"><strong>Demo model:</strong> this workbook has no historical attrition outcome. Scores are an explainable screening heuristic based on tenure, employment status, location, and team type.</div>', unsafe_allow_html=True)
+if "historical" in target_source:
+    model_note = '<strong>Logistic Regression:</strong> probabilities are trained from the uploaded historical Attrition column. Risk signals remain visible as supporting context.'
+else:
+    model_note = '<strong>Demo Logistic Regression:</strong> this workbook has no historical Attrition column, so demo labels are generated from the original screening rules. Replace the demo workbook with historical Attrition Yes/No data for a validated model.'
+st.markdown(f'<div class="note">{model_note}</div>', unsafe_allow_html=True)
 
 st.markdown("### Likely to leave")
 if priority_employees.empty:
     st.success("No elevated attrition signals found in the current filtered employee list.")
 else:
-    st.caption("Employees below have elevated screening scores. The reason column shows the signals contributing to each score.")
+    st.caption("Employees below have elevated predicted probability. The reason column shows the supporting signals contributing to the screening result.")
     priority_view = priority_employees[["Employee ID", "Full Name", "Department", "Job Title", "Risk Score", "Risk Level", "Risk Signals"]]
     st.dataframe(
         priority_view,
@@ -190,7 +244,7 @@ if not filtered.empty:
     selected_id = st.selectbox("Employee", filtered["Employee ID"].tolist(), format_func=lambda value: f"{value} - {filtered.loc[filtered['Employee ID'].eq(value), 'Full Name'].iloc[0]}")
     selected = filtered[filtered["Employee ID"] == selected_id].iloc[0]
     detail_columns = st.columns(4)
-    detail_columns[0].metric("Risk score", f"{selected['Risk Score']}/100")
+    detail_columns[0].metric("Attrition probability", f"{selected['Attrition Probability']:.0%}")
     detail_columns[1].metric("Risk level", selected["Risk Level"])
     detail_columns[2].metric("Status", selected["Employment Status"])
     detail_columns[3].metric("Location", selected["Location"])

@@ -1,10 +1,10 @@
 # Stackly Attrition Prediction
 
-A small Streamlit demo that reads the Stackly employee Excel workbook and estimates attrition risk from the fields available in the sample data.
+A small Streamlit dashboard that reads the Stackly employee Excel workbook and estimates attrition probability with Logistic Regression.
 
 ## Important note
 
-The source workbook does not contain a historical `Attrition` outcome column. This app therefore uses an explainable screening score, not a trained predictive model. Use the result for demonstration only until historical attrition labels and stronger HR features are available.
+The source workbook does not contain a historical `Attrition` outcome column. The app uses clearly labeled demo targets generated from the original screening rules so the Logistic Regression workflow can run. Upload historical `Attrition` values of `Yes` or `No` for a real training target.
 
 ## Run
 
