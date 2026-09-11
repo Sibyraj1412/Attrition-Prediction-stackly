@@ -217,10 +217,15 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("### Data source")
-    uploaded_file = st.file_uploader("Upload an employee workbook", type=["xlsx"])
+    with st.form("workbook_form", clear_on_submit=False):
+        selected_file = st.file_uploader("Upload an employee workbook", type=["xlsx"])
+        load_workbook = st.form_submit_button("Load workbook", type="primary", icon=":material/upload_file:")
+    if load_workbook and selected_file is not None:
+        st.session_state["uploaded_workbook"] = selected_file
+    uploaded_file = st.session_state.get("uploaded_workbook")
     source_name = uploaded_file.name if uploaded_file is not None else DATA_PATH.name
     st.caption(f"Active workbook: {source_name}")
-    st.caption("Upload a different .xlsx file at any time to refresh the dashboard.")
+    st.caption("Choose a file, then press Load workbook to refresh the dashboard.")
     st.markdown("### Filters")
     st.caption("Use the controls below to narrow the employee view.")
 
