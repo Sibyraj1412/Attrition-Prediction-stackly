@@ -28,6 +28,13 @@ REQUIRED_COLUMNS = {
     "Employment Status",
 }
 MODEL_FEATURES = ["Tenure Years", "Department", "Location", "Employment Status"]
+WORKBOOK_COLUMN_ALIASES = {
+    "Date of Joining": "Joining Date",
+    "Designation": "Job Title",
+    "Phone Number": "Phone",
+    "Status": "Employment Status",
+    "Work Location": "Location",
+}
 
 st.markdown(
     """
@@ -76,11 +83,28 @@ def load_employee_data(uploaded_file):
     except Exception as exc:
         st.error(f"Could not read the workbook: {exc}")
         st.stop()
+    workbook = workbook.rename(columns=WORKBOOK_COLUMN_ALIASES)
+    if "Full Name" not in workbook.columns and {"First Name", "Last Name"}.issubset(workbook.columns):
+        workbook["Full Name"] = (
+            workbook["First Name"].fillna("").astype(str).str.strip()
+            + " "
+            + workbook["Last Name"].fillna("").astype(str).str.strip()
+        ).str.strip()
+    workbook["Employee ID"] = workbook["Employee ID"].fillna("").astype(str).str.strip()
+    missing_ids = workbook["Employee ID"].eq("")
+    workbook.loc[missing_ids, "Employee ID"] = [
+        f"EMP-{index + 1:03d}" for index in workbook.index[missing_ids]
+    ]
+    workbook["Full Name"] = workbook["Full Name"].where(
+        workbook["Full Name"].ne(""), workbook["Employee ID"]
+    )
     missing = REQUIRED_COLUMNS.difference(workbook.columns)
     if missing:
         st.error("Missing required columns: " + ", ".join(sorted(missing)))
         st.stop()
     workbook["Joining Date"] = pd.to_datetime(workbook["Joining Date"], errors="coerce")
+    if "Attrition" not in workbook.columns:
+        workbook["Attrition"] = workbook["Employment Status"].astype(str).str.strip().str.lower().eq("resigned").map({True: "Yes", False: "No"})
     return workbook
 
 

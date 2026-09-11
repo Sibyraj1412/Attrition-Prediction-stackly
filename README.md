@@ -9,9 +9,9 @@ The app includes:
 - Employee roster filtered by department, location, and risk level.
 - Attrition risk screening with Logistic Regression, risk signals, charts, and individual employee inspection.
 
-## Important note
+## Data note
 
-The source workbook does not contain a historical `Attrition` outcome column. The app uses clearly labeled demo targets generated from the original screening rules so the Logistic Regression workflow can run. Upload historical `Attrition` values of `Yes` or `No` for a real training target.
+The bundled workbook contains 106 Indian-format employee records. Its `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples. Use validated historical outcomes before treating model probabilities as production predictions.
 
 ## Run
 
