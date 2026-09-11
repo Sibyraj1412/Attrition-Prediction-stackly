@@ -59,6 +59,12 @@ st.markdown(
     .metric-card { background:rgba(255,255,255,.86); border:1px solid var(--line); box-shadow:0 8px 24px rgba(31,25,12,.07); padding:1rem 1.1rem; border-radius:10px; min-height:105px; }
     .metric-label { color:var(--muted) !important; font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
     .metric-value { color:var(--ink) !important; font:700 1.9rem 'Space Grotesk'; margin-top:.35rem; }
+    [data-testid="stMetric"] { color:var(--ink) !important; }
+    [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p,
+    [data-testid="stMetricValue"], [data-testid="stMetricValue"] div,
+    [data-testid="stMetricDelta"] { color:var(--ink) !important; }
+    [data-testid="stMetricLabel"] { font-weight:600; }
+    [data-testid="stMetricValue"] { font-family:'Space Grotesk',sans-serif; }
     .note { background:#fff8e8; border:1px solid #e7c978; border-left:4px solid var(--gold); padding:.8rem 1rem; color:#5a4517; border-radius:8px; }
     .section-kicker { color:var(--teal); font-size:.75rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
     [data-testid="stDataFrame"], [data-testid="stArrowVegaLiteChart"] { animation:rise-in .5s ease-out both; }
