@@ -118,6 +118,12 @@ def load_employee_data(uploaded_file):
     for column in text_columns:
         if column in workbook.columns:
             workbook[column] = workbook[column].fillna("").astype(str).str.strip()
+    employee_row_fields = ["Employee ID", "Full Name", "Department", "Job Title"]
+    valid_employee_rows = workbook[employee_row_fields].ne("").all(axis=1)
+    ignored_rows = int((~valid_employee_rows).sum())
+    if ignored_rows:
+        st.info(f"Ignored {ignored_rows} non-employee summary rows from the workbook.")
+        workbook = workbook.loc[valid_employee_rows].copy()
     missing = REQUIRED_COLUMNS.difference(workbook.columns)
     if missing:
         st.error("Missing required columns: " + ", ".join(sorted(missing)))
