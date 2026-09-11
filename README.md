@@ -1,17 +1,21 @@
 # Stackly Workforce Analytics
 
-A Streamlit workforce analytics workspace that loads the bundled Indian employee workbook and provides workforce overview metrics alongside an explainable attrition-risk radar.
+A Streamlit workforce intelligence platform for HR teams, managers, and administrators. It loads the bundled Indian employee workbook, supports alternate `.xlsx` uploads, and combines workforce analytics with explainable attrition screening.
 
 The app includes:
 
 - One combined dashboard that brings workforce health and attrition priorities onto one screen.
-- Workforce overview with headcount, active employees, tenure, department, location, and employment-status analysis.
-- Employee roster filtered by department, location, and risk level.
-- Attrition risk screening with Logistic Regression, risk signals, charts, and individual employee inspection.
+- Overview with headcount, location, department, hiring, diversity, leave, and alert signals.
+- Employee Analytics with search, pagination, workforce charts, and complete employee details.
+- Attrition Prediction with risk watchlist, confidence, evaluation metrics, and screening-factor importance.
+- Dedicated platform routes for performance, recruitment, attendance, compensation, engagement, learning, and reports.
+- Role-aware navigation for HR, Manager, and Admin users; salary is hidden from Manager tables.
 
 ## Data note
 
-The bundled workbook contains 106 Indian-format employee records. Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples. Use validated historical outcomes before treating model probabilities as production predictions.
+The bundled workbook contains 106 Indian-format rows, of which 100 are employee records after summary rows are removed. Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples.
+
+Where the workbook lacks performance, engagement, productivity, recruitment, attendance, or learning entities, the platform creates clearly labeled deterministic demo fields for development. These values must be replaced with approved operational data before production use. Predictions are decision-support signals, not automatic employment decisions.
 
 ## Run
 
