@@ -217,6 +217,44 @@ def employee_table(data, limit=None, role="HR"):
     st.dataframe(view, width="stretch", hide_index=True, column_config=config)
 
 
+def render_employee_profile(data, role, key="employee_profile"):
+    if data.empty:
+        st.info("No employee is available for profile inspection with the current filters.")
+        return
+    st.markdown("### Inspect employee")
+    employee_ids = data["Employee ID"].tolist()
+    selected_id = st.selectbox(
+        "Select an employee to view details",
+        employee_ids,
+        key=key,
+        format_func=lambda value: f"{value} - {data.loc[data['Employee ID'].eq(value), 'Full Name'].iloc[0]}",
+    )
+    selected = data.loc[data["Employee ID"].eq(selected_id)].iloc[0]
+    profile_columns = st.columns(4)
+    profile_values = [
+        ("Department", selected["Department"]),
+        ("Job title", selected["Job Title"]),
+        ("Location", selected["Location"]),
+        ("Manager", selected["Manager"]),
+        ("Tenure", f"{selected['Tenure Years']:.1f} years"),
+        ("Performance", f"{selected['Performance Rating']:.1f}/5"),
+        ("Engagement", f"{selected['Engagement Score']:.0f}/100"),
+        ("Employment status", selected["Employment Status"]),
+        ("Risk score", f"{selected['Risk Score']}/100"),
+        ("Risk level", selected["Risk Level"]),
+        ("Prediction confidence", f"{selected['Prediction Confidence']:.1%}"),
+        ("Attrition probability", f"{selected['Attrition Probability']:.1%}"),
+    ]
+    for index, (label, value) in enumerate(profile_values):
+        with profile_columns[index % 4]:
+            st.metric(label, value, border=True)
+    if role != "Manager":
+        st.caption(f"Email: {selected['Email']} | Phone: {selected['Phone']} | Salary: Rs. {selected['Salary']:,.0f}")
+    else:
+        st.caption(f"Email: {selected['Email']} | Phone: {selected['Phone']}")
+    st.info(f"Risk signals: {selected['Risk Signals']}")
+
+
 def render_overview(data, target_source):
     st.markdown('<div class="section-kicker">Workforce command center</div>', unsafe_allow_html=True)
     st.markdown("## Workforce overview")
@@ -266,6 +304,7 @@ def render_employee_analytics(data, role):
     page = st.number_input("Page", min_value=1, max_value=page_count, value=1, step=1)
     employee_table(result.iloc[(page - 1) * page_size: page * page_size], role=role)
     st.caption(f"Showing {len(result.iloc[(page - 1) * page_size: page * page_size])} of {len(result)} matching employees.")
+    render_employee_profile(result, role)
 
 
 def render_attrition(data, model_status):
