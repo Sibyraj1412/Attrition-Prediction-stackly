@@ -304,7 +304,6 @@ def render_employee_analytics(data, role):
     page = st.number_input("Page", min_value=1, max_value=page_count, value=1, step=1)
     employee_table(result.iloc[(page - 1) * page_size: page * page_size], role=role)
     st.caption(f"Showing {len(result.iloc[(page - 1) * page_size: page * page_size])} of {len(result)} matching employees.")
-    render_employee_profile(result, role)
 
 
 def render_attrition(data, model_status):
@@ -409,6 +408,9 @@ if isinstance(date_range, tuple) and len(date_range) == 2:
 st.markdown("""
 <div class="hero"><div class="eyebrow">Stackly people analytics</div><h1>Workforce intelligence</h1><p>One decision workspace for workforce health, employee details, performance signals, and transparent attrition screening.</p></div>
 """, unsafe_allow_html=True)
+
+render_employee_profile(filtered, role, key="global_employee_profile")
+st.divider()
 
 if page == "Overview":
     render_overview(filtered, raw.attrs.get("target_source", "demo screening labels"))
