@@ -296,16 +296,15 @@ def render_attrition(data, model_status):
 
 
 def render_demo_module(title, subtitle, data, cards, charts):
-    st.markdown('<div class="section-kicker">Demo module</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-kicker">Workforce analytics</div>', unsafe_allow_html=True)
     st.markdown(f"## {title}")
-    st.caption(subtitle + " These metrics are marked demo until the corresponding source entity is connected.")
+    st.caption(subtitle)
+    st.info("Demo mode active: this view uses development estimates because the uploaded workbook does not include this module's source records.")
     kpis(cards)
     columns = st.columns(2)
     for column, (chart_title, values, color) in zip(columns, charts):
         with column:
             chart_card(chart_title, values, color)
-    st.markdown("### Data connection status")
-    st.info("This module is scaffolded for the next data source: connect the matching entity to replace demo values with operational analytics.")
 
 
 def render_reports(data):
