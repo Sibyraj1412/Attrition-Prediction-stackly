@@ -101,6 +101,23 @@ def load_employee_data(uploaded_file):
     workbook["Full Name"] = workbook["Full Name"].where(
         workbook["Full Name"].ne(""), workbook["Employee ID"]
     )
+    text_columns = [
+        "Employee ID",
+        "Full Name",
+        "First Name",
+        "Last Name",
+        "Department",
+        "Job Title",
+        "Email",
+        "Phone",
+        "Location",
+        "Employment Type",
+        "Employment Status",
+        "Reporting Manager",
+    ]
+    for column in text_columns:
+        if column in workbook.columns:
+            workbook[column] = workbook[column].fillna("").astype(str).str.strip()
     missing = REQUIRED_COLUMNS.difference(workbook.columns)
     if missing:
         st.error("Missing required columns: " + ", ".join(sorted(missing)))
@@ -303,22 +320,40 @@ if True:
             ).rename("Employees")
             st.bar_chart(tenure_counts, color="#6b5b95")
 
-    st.markdown("### Employee roster")
+    st.markdown("### Complete employee details")
+    employee_detail_columns = [
+        "Employee ID",
+        "Full Name",
+        "First Name",
+        "Last Name",
+        "Department",
+        "Job Title",
+        "Email",
+        "Phone",
+        "Location",
+        "Joining Date",
+        "Employment Type",
+        "Employment Status",
+        "Reporting Manager",
+        "Annual Salary (Rs.)",
+        "Tenure Years",
+        "Attrition",
+        "Attrition Probability",
+        "Risk Score",
+        "Risk Level",
+        "Risk Signals",
+    ]
+    employee_detail_columns = [
+        column for column in employee_detail_columns if column in filtered.columns
+    ]
     st.dataframe(
-        filtered[
-            [
-                "Employee ID",
-                "Full Name",
-                "Department",
-                "Job Title",
-                "Location",
-                "Employment Status",
-                "Tenure Years",
-            ]
-        ].sort_values(["Department", "Full Name"]),
+        filtered[employee_detail_columns].sort_values(["Department", "Full Name"]),
         hide_index=True,
         column_config={
             "Tenure Years": st.column_config.NumberColumn("Tenure", format="%.1f years"),
+            "Annual Salary (Rs.)": st.column_config.NumberColumn("Annual salary", format="Rs. %.0f"),
+            "Attrition Probability": st.column_config.NumberColumn("Attrition probability", format="%.1%"),
+            "Risk Score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d"),
         },
     )
 metrics = st.columns(4)
