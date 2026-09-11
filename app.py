@@ -22,7 +22,11 @@ ALIASES = {
     "Status": "Employment Status", "Work Location": "Location", "Reporting Manager": "Manager",
     "Annual Salary (Rs.)": "Salary",
 }
-MODEL_FEATURES = ["Tenure Years", "Department", "Location", "Employment Status"]
+MODEL_FEATURES = [
+    "Tenure Years", "Department", "Location", "Employment Status", "Engagement Score",
+    "Salary", "Performance Rating", "Manager Changes", "Promotion History", "Overtime Hours",
+    "Absence Days", "Job Satisfaction", "Recent Role Change",
+]
 NAVIGATION = [
     "Overview", "Employee Analytics", "Attrition Prediction", "Performance & Productivity",
     "Recruitment", "Attendance & Time", "Compensation", "Engagement & Retention",
@@ -155,7 +159,10 @@ def enrich(workbook):
 
 
 def train_model(data):
-    numeric = ["Tenure Years"]
+    numeric = [
+        "Tenure Years", "Engagement Score", "Salary", "Performance Rating", "Manager Changes",
+        "Promotion History", "Overtime Hours", "Absence Days", "Job Satisfaction",
+    ]
     categorical = ["Department", "Location", "Employment Status"]
     processor = ColumnTransformer([("numeric", StandardScaler(), numeric), ("categorical", OneHotEncoder(handle_unknown="ignore"), categorical)])
     model = Pipeline([("preprocessor", processor), ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced"))])
@@ -295,11 +302,12 @@ def render_attrition(data, model_status):
     st.bar_chart(factors, color="#c5962e")
 
 
-def render_demo_module(title, subtitle, data, cards, charts):
+def render_demo_module(title, subtitle, data, cards, charts, demo=True):
     st.markdown('<div class="section-kicker">Workforce analytics</div>', unsafe_allow_html=True)
     st.markdown(f"## {title}")
     st.caption(subtitle)
-    st.info("Demo mode active: this view uses development estimates because the uploaded workbook does not include this module's source records.")
+    if demo:
+        st.info("Demo mode active: this view uses development estimates because the uploaded workbook does not include this module's source records.")
     kpis(cards)
     columns = st.columns(2)
     for column, (chart_title, values, color) in zip(columns, charts):
@@ -370,15 +378,15 @@ elif page == "Employee Analytics":
 elif page == "Attrition Prediction":
     render_attrition(filtered, model_status)
 elif page == "Performance & Productivity":
-    render_demo_module("Performance & productivity", "Compare performance, goal completion, potential, and team productivity.", filtered, [("Average performance", f"{filtered['Performance Rating'].mean():.1f}/5"), ("Goal completion", f"{filtered['Goal Completion %'].mean():.0f}%"), ("Engagement", f"{filtered['Engagement Score'].mean():.0f}/100"), ("Talent grid", "9-box")], [("Performance by department", filtered.groupby("Department")["Performance Rating"].mean(), "#087f8c"), ("Goal completion by department", filtered.groupby("Department")["Goal Completion %"].mean(), "#e76f51")])
+    render_demo_module("Performance & productivity", "Compare performance, goal completion, potential, and team productivity.", filtered, [("Average performance", f"{filtered['Performance Rating'].mean():.1f}/5"), ("Goal completion", f"{filtered['Goal Completion %'].mean():.0f}%"), ("Engagement", f"{filtered['Engagement Score'].mean():.0f}/100"), ("Talent grid", "9-box")], [("Performance by department", filtered.groupby("Department")["Performance Rating"].mean(), "#087f8c"), ("Goal completion by department", filtered.groupby("Department")["Goal Completion %"].mean(), "#e76f51")], demo=False)
 elif page == "Recruitment":
     render_demo_module("Recruitment analytics", "Track the hiring funnel and recruitment efficiency.", filtered, [("Open positions", "18"), ("Time to hire", "24 days"), ("Offer acceptance", "82%"), ("Hires this quarter", "31")], [("Hiring by department", filtered["Department"].value_counts(), "#087f8c"), ("Recruitment trend", pd.Series([8, 12, 10, 16, 19, 23], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"]), "#e76f51")])
 elif page == "Attendance & Time":
-    render_demo_module("Attendance & time", "Monitor attendance, leave utilization, overtime, and work location mix.", filtered, [("Attendance rate", "94.2%"), ("Absence rate", "3.1%"), ("Overtime hours", f"{filtered['Overtime Hours'].sum():,}"), ("Remote ratio", f"{filtered['Location'].str.lower().eq('remote').mean():.0%}")], [("Attendance by department", (100 - filtered.groupby("Department")["Absence Days"].mean() * 1.2).clip(0, 100), "#087f8c"), ("Overtime by department", filtered.groupby("Department")["Overtime Hours"].sum(), "#e76f51")])
+    render_demo_module("Attendance & time", "Monitor attendance, leave utilization, overtime, and work location mix.", filtered, [("Attendance rate", f"{(100 - filtered['Absence Days'].mean() / 20 * 100):.1f}%"), ("Absence rate", f"{filtered['Absence Days'].mean() / 20:.1%}"), ("Overtime hours", f"{filtered['Overtime Hours'].sum():,}"), ("Remote ratio", f"{filtered['Location'].str.lower().eq('remote').mean():.0%}")], [("Attendance by department", (100 - filtered.groupby("Department")["Absence Days"].mean() / 20 * 100).clip(0, 100), "#087f8c"), ("Overtime by department", filtered.groupby("Department")["Overtime Hours"].sum(), "#e76f51")], demo=False)
 elif page == "Compensation":
-    render_demo_module("Compensation analytics", "Review salary distribution, benchmarking, and pay equity signals without implying causation.", filtered, [("Average salary", f"Rs. {filtered['Salary'].mean():,.0f}"), ("Median salary", f"Rs. {filtered['Salary'].median():,.0f}"), ("Salary bands", "5"), ("Pay equity review", "Ready")], [("Salary by department", filtered.groupby("Department")["Salary"].mean(), "#087f8c"), ("Compensation vs performance", filtered.groupby("Performance Rating")["Salary"].mean(), "#e76f51")])
+    render_demo_module("Compensation analytics", "Review salary distribution, benchmarking, and pay equity signals without implying causation.", filtered, [("Average salary", f"Rs. {filtered['Salary'].mean():,.0f}"), ("Median salary", f"Rs. {filtered['Salary'].median():,.0f}"), ("Salary bands", str(filtered['Salary'].nunique()),), ("Pay equity review", "Ready")], [("Salary by department", filtered.groupby("Department")["Salary"].mean(), "#087f8c"), ("Compensation vs performance", filtered.groupby("Performance Rating")["Salary"].mean(), "#e76f51")], demo=False)
 elif page == "Engagement & Retention":
-    render_demo_module("Engagement & retention", "Track engagement, eNPS, concerns, and retention indicators.", filtered, [("Engagement score", f"{filtered['Engagement Score'].mean():.0f}/100"), ("eNPS", "+34"), ("Positive trend", "68%"), ("Retention signals", f"{int((filtered['Risk Level'] == 'High').sum())}")], [("Engagement by department", filtered.groupby("Department")["Engagement Score"].mean(), "#087f8c"), ("Engagement trend", pd.Series([62, 64, 63, 67, 69, 71], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"]), "#e76f51")])
+    render_demo_module("Engagement & retention", "Track engagement, eNPS, concerns, and retention indicators.", filtered, [("Engagement score", f"{filtered['Engagement Score'].mean():.0f}/100"), ("eNPS", f"{(filtered['Engagement Score'].ge(70).mean() - filtered['Engagement Score'].le(50).mean()) * 100:.0f}"), ("Positive trend", f"{filtered['Engagement Score'].ge(70).mean():.0%}"), ("Retention signals", f"{int((filtered['Risk Level'] == 'High').sum())}")], [("Engagement by department", filtered.groupby("Department")["Engagement Score"].mean(), "#087f8c"), ("Engagement trend", filtered.groupby(filtered["Joining Date"].dt.year)["Engagement Score"].mean(), "#e76f51")], demo=False)
 elif page == "Learning & Development":
     render_demo_module("Learning & development", "Track training participation, certification coverage, and skill gaps.", filtered, [("Training completion", "76%"), ("Participation", "84%"), ("Skill gaps", "12"), ("Certifications expiring", "7")], [("Training by department", filtered.groupby("Department")["Goal Completion %"].mean(), "#087f8c"), ("Learning progress", pd.Series([48, 55, 61, 68, 73, 76], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"]), "#e76f51")])
 elif page == "Reports":

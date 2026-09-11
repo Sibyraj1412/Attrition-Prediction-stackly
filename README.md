@@ -13,9 +13,9 @@ The app includes:
 
 ## Data note
 
-The bundled workbook contains 106 Indian-format rows, of which 100 are employee records after summary rows are removed. Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples.
+The bundled workbook contains 106 Indian-format rows, of which 100 are employee records after summary rows are removed. It now includes development fields for gender, performance, potential, engagement, goals, manager changes, promotions, overtime, absence, satisfaction, role changes, and attrition. Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples.
 
-Where the workbook lacks performance, engagement, productivity, recruitment, attendance, or learning entities, the platform creates clearly labeled deterministic demo fields for development. These values must be replaced with approved operational data before production use. Predictions are decision-support signals, not automatic employment decisions.
+Recruitment and Learning & Development remain demo modules because the workbook has no requisition, candidate, training, or certification entities. The other analytics modules use workbook-backed fields. Development fields are deterministic sample values and must be replaced with approved operational data before production use. Predictions are decision-support signals, not automatic employment decisions.
 
 ## Run
 
