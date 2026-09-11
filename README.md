@@ -1,6 +1,13 @@
-# Stackly Attrition Prediction
+# Stackly Workforce Analytics
 
-A small Streamlit dashboard that reads the Stackly employee Excel workbook and estimates attrition probability with Logistic Regression.
+A Streamlit workforce analytics workspace that reads the Stackly employee Excel workbook and provides workforce overview metrics alongside an explainable attrition-risk radar.
+
+The app includes:
+
+- One combined dashboard that brings workforce health and attrition priorities onto one screen.
+- Workforce overview with headcount, active employees, tenure, department, location, and employment-status analysis.
+- Employee roster filtered by department, location, and risk level.
+- Attrition risk screening with Logistic Regression, risk signals, charts, and individual employee inspection.
 
 ## Important note
 

@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 st.set_page_config(
-    page_title="Stackly Attrition Radar",
+    page_title="Stackly Workforce Analytics",
     page_icon="S",
     layout="wide",
 )
@@ -172,8 +172,8 @@ st.markdown(
     """
     <div class="hero">
       <div class="eyebrow">Stackly people analytics</div>
-      <h1>Attrition Radar</h1>
-    <p>A Logistic Regression screening dashboard: estimate attrition probability, inspect the people behind the number, and keep the reasoning visible.</p>
+      <h1>Workforce analytics</h1>
+    <p>A focused workforce workspace for understanding your people, prioritizing retention conversations, and keeping the reasoning visible.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -206,6 +206,78 @@ medium_count = int((filtered["Risk Level"] == "Medium").sum())
 avg_score = filtered["Risk Score"].mean() if not filtered.empty else 0
 priority_employees = filtered[filtered["Risk Level"].isin(["High", "Medium"])].sort_values("Risk Score", ascending=False)
 
+if True:
+    active_count = int(filtered["Employment Status"].astype(str).str.lower().eq("active").sum())
+    average_tenure = filtered["Tenure Years"].mean() if not filtered.empty else 0
+    department_count = filtered["Department"].nunique()
+
+    st.markdown("### Workforce overview")
+    st.caption("A population-level view of the employees currently included by your filters.")
+    overview_metrics = st.columns(4)
+    overview_values = [
+        ("Employees shown", len(filtered)),
+        ("Active employees", active_count),
+        ("Average tenure", f"{average_tenure:.1f} years"),
+        ("Departments", department_count),
+    ]
+    for column, (label, value) in zip(overview_metrics, overview_values):
+        with column:
+            st.metric(label, value, border=True)
+
+    if filtered.empty:
+        st.info("No employees match the selected filters.")
+        st.stop()
+
+    left, right = st.columns(2)
+    with left:
+        with st.container(border=True):
+            st.markdown("#### Headcount by department")
+            department_counts = filtered["Department"].value_counts().rename("Employees")
+            st.bar_chart(department_counts, color="#087f8c")
+    with right:
+        with st.container(border=True):
+            st.markdown("#### Employment status")
+            status_counts = filtered["Employment Status"].value_counts().rename("Employees")
+            st.bar_chart(status_counts, color="#e76f51")
+
+    left, right = st.columns(2)
+    with left:
+        with st.container(border=True):
+            st.markdown("#### Workforce by location")
+            location_counts = filtered["Location"].value_counts().rename("Employees")
+            st.bar_chart(location_counts, color="#c5962e")
+    with right:
+        with st.container(border=True):
+            st.markdown("#### Tenure profile")
+            tenure_bins = pd.cut(
+                filtered["Tenure Years"],
+                bins=[-0.01, 1, 2, 5, float("inf")],
+                labels=["Under 1 year", "1-2 years", "2-5 years", "5+ years"],
+            )
+            tenure_counts = tenure_bins.value_counts().reindex(
+                ["Under 1 year", "1-2 years", "2-5 years", "5+ years"],
+                fill_value=0,
+            ).rename("Employees")
+            st.bar_chart(tenure_counts, color="#6b5b95")
+
+    st.markdown("### Employee roster")
+    st.dataframe(
+        filtered[
+            [
+                "Employee ID",
+                "Full Name",
+                "Department",
+                "Job Title",
+                "Location",
+                "Employment Status",
+                "Tenure Years",
+            ]
+        ].sort_values(["Department", "Full Name"]),
+        hide_index=True,
+        column_config={
+            "Tenure Years": st.column_config.NumberColumn("Tenure", format="%.1f years"),
+        },
+    )
 metrics = st.columns(4)
 metric_values = [("Employees shown", len(filtered)), ("High risk", high_count), ("Medium risk", medium_count), ("Average score", f"{avg_score:.0f}/100")]
 for column, (label, value) in zip(metrics, metric_values):
@@ -227,7 +299,7 @@ else:
     priority_view = priority_employees[["Employee ID", "Full Name", "Department", "Job Title", "Risk Score", "Risk Level", "Risk Signals"]]
     st.dataframe(
         priority_view,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "Risk Score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d"),
@@ -251,7 +323,7 @@ with right:
 
 st.markdown("### Employee risk list")
 display = filtered[["Employee ID", "Full Name", "Department", "Job Title", "Location", "Risk Score", "Risk Level", "Risk Signals"]].sort_values("Risk Score", ascending=False)
-st.dataframe(display, use_container_width=True, hide_index=True, column_config={"Risk Score": st.column_config.ProgressColumn("Risk Score", min_value=0, max_value=100, format="%d")})
+st.dataframe(display, width="stretch", hide_index=True, column_config={"Risk Score": st.column_config.ProgressColumn("Risk Score", min_value=0, max_value=100, format="%d")})
 
 st.markdown("### Inspect one employee")
 if not filtered.empty:
