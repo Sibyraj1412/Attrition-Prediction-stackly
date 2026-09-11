@@ -1,6 +1,6 @@
 # Stackly Workforce Analytics
 
-A Streamlit workforce analytics workspace that accepts an employee Excel upload and provides workforce overview metrics alongside an explainable attrition-risk radar.
+A Streamlit workforce analytics workspace that loads the bundled Indian employee workbook and provides workforce overview metrics alongside an explainable attrition-risk radar.
 
 The app includes:
 
@@ -11,7 +11,7 @@ The app includes:
 
 ## Data note
 
-Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples. Use validated historical outcomes before treating model probabilities as production predictions.
+The bundled workbook contains 106 Indian-format employee records. Uploaded workbooks may use the standard employee columns or supported Indian-format aliases. A `Resigned` status is normalized into the model's `Attrition` target, while `Active` and `On Leave` are treated as non-attrition examples. Use validated historical outcomes before treating model probabilities as production predictions.
 
 ## Run
 
@@ -21,7 +21,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-The app requires an `.xlsx` upload with the standard employee columns or supported aliases.
+The app uses the bundled workbook automatically and also accepts an `.xlsx` upload with the standard employee columns or supported aliases.
 
 ## Documentation
 

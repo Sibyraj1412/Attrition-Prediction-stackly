@@ -15,6 +15,7 @@ st.set_page_config(
     layout="wide",
 )
 
+DATA_PATH = Path(__file__).parent / "data" / "stackly_employee_details.xlsx"
 REQUIRED_COLUMNS = {
     "Employee ID",
     "Full Name",
@@ -76,10 +77,7 @@ st.markdown(
 
 
 def load_employee_data(uploaded_file):
-    if uploaded_file is None:
-        st.info("Upload an employee workbook from the sidebar to open the dashboard.")
-        st.stop()
-    source = uploaded_file
+    source = uploaded_file if uploaded_file is not None else DATA_PATH
     try:
         workbook = pd.read_excel(source, sheet_name="Employee Details")
     except Exception as exc:
@@ -208,7 +206,7 @@ st.markdown(
 with st.sidebar:
     st.markdown("### Data source")
     uploaded_file = st.file_uploader("Upload an employee workbook", type=["xlsx"])
-    st.caption("Upload an .xlsx workbook to load workforce data.")
+    st.caption("The bundled Employee_Details workbook is used when no file is uploaded.")
     st.markdown("### Filters")
     st.caption("Use the controls below to narrow the employee view.")
 
