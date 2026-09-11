@@ -79,10 +79,13 @@ st.markdown(
 def load_employee_data(uploaded_file):
     source = uploaded_file if uploaded_file is not None else DATA_PATH
     try:
-        workbook = pd.read_excel(source, sheet_name="Employee Details")
+        workbook_file = pd.ExcelFile(source)
+        sheet_name = "Employee Details" if "Employee Details" in workbook_file.sheet_names else workbook_file.sheet_names[0]
+        workbook = pd.read_excel(workbook_file, sheet_name=sheet_name)
     except Exception as exc:
         st.error(f"Could not read the workbook: {exc}")
         st.stop()
+    workbook.columns = workbook.columns.astype(str).str.strip()
     workbook = workbook.rename(columns=WORKBOOK_COLUMN_ALIASES)
     if "Full Name" not in workbook.columns and {"First Name", "Last Name"}.issubset(workbook.columns):
         workbook["Full Name"] = (
@@ -103,8 +106,17 @@ def load_employee_data(uploaded_file):
         st.error("Missing required columns: " + ", ".join(sorted(missing)))
         st.stop()
     workbook["Joining Date"] = pd.to_datetime(workbook["Joining Date"], errors="coerce")
+    if workbook["Joining Date"].isna().any():
+        st.warning("Some joining dates could not be read and were treated as missing.")
     if "Attrition" not in workbook.columns:
-        workbook["Attrition"] = workbook["Employment Status"].astype(str).str.strip().str.lower().eq("resigned").map({True: "Yes", False: "No"})
+        status_values = workbook["Employment Status"].astype(str).str.strip().str.lower()
+        if status_values.eq("resigned").any():
+            workbook["Attrition"] = status_values.eq("resigned").map({True: "Yes", False: "No"})
+            workbook.attrs["target_source"] = "historical Resigned status"
+        else:
+            workbook.attrs["target_source"] = "demo labels generated from the existing screening rules"
+    else:
+        workbook.attrs["target_source"] = "historical Attrition column"
     return workbook
 
 
@@ -150,7 +162,7 @@ def add_features(workbook):
 
 def train_logistic_model(workbook):
     model_data = add_features(workbook)
-    target_source = "historical Attrition column"
+    target_source = workbook.attrs.get("target_source", "historical Attrition column")
     if "Attrition" in model_data.columns:
         target = model_data["Attrition"].astype(str).str.strip().str.lower().isin({"yes", "y", "true", "1", "left"}).astype(int)
     else:
@@ -206,7 +218,9 @@ st.markdown(
 with st.sidebar:
     st.markdown("### Data source")
     uploaded_file = st.file_uploader("Upload an employee workbook", type=["xlsx"])
-    st.caption("The bundled Employee_Details workbook is used when no file is uploaded.")
+    source_name = uploaded_file.name if uploaded_file is not None else DATA_PATH.name
+    st.caption(f"Active workbook: {source_name}")
+    st.caption("Upload a different .xlsx file at any time to refresh the dashboard.")
     st.markdown("### Filters")
     st.caption("Use the controls below to narrow the employee view.")
 
@@ -309,8 +323,10 @@ for column, (label, value) in zip(metrics, metric_values):
         st.markdown(f'<div class="metric"><div class="metric-label">{label}</div><div class="metric-value">{value}</div></div>', unsafe_allow_html=True)
 
 st.write("")
-if "historical" in target_source:
-    model_note = '<strong>Logistic Regression:</strong> probabilities are trained from the uploaded historical Attrition column. Risk signals remain visible as supporting context.'
+if target_source == "historical Attrition column":
+    model_note = '<strong>Logistic Regression:</strong> predictions use the workbook\'s historical Attrition column. Risk signals remain visible as supporting context.'
+elif target_source == "historical Resigned status":
+    model_note = '<strong>Logistic Regression:</strong> predictions use Resigned employees as historical attrition examples. Risk signals remain visible as supporting context.'
 else:
     model_note = '<strong>Demo Logistic Regression:</strong> this workbook has no historical Attrition column, so demo labels are generated from the original screening rules. Replace the demo workbook with historical Attrition Yes/No data for a validated model.'
 st.markdown(f'<div class="note">{model_note}</div>', unsafe_allow_html=True)
