@@ -41,34 +41,169 @@ ROLE_PAGES = {
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-    :root { --ink:#17191d; --muted:#687078; --teal:#087f8c; --coral:#e76f51; --gold:#c5962e; --cream:#f7f2e7; --line:#dfd3b9; --navy:#161b25; }
-    html, body, [class*="css"] { font-family:'DM Sans',sans-serif; color:var(--ink); }
-    h1,h2,h3,h4 { font-family:'Space Grotesk',sans-serif; color:var(--ink) !important; }
-    .stApp { background:linear-gradient(135deg,#f7f2e7 0%,#fffdf8 55%,#f1eadb 100%); }
-    [data-testid="stSidebar"] { background:var(--navy) !important; border-right:1px solid #2e3544; }
-    [data-testid="stSidebar"] * { color:#f6f0e3 !important; }
-    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color:#bfc6cf !important; }
-    [data-testid="stSidebar"] [data-baseweb="select"] > div { background:#202633 !important; border:1px solid #68734d; }
-    [data-testid="stSidebar"] button { background:#202633; border:1px solid #8b7237; }
-    .block-container { padding-top:2rem; padding-bottom:3rem; }
-    .hero { padding:1.1rem 0 1.2rem; border-bottom:1px solid var(--line); margin-bottom:1.3rem; }
-    .eyebrow { color:var(--gold); font-size:.76rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
-    .hero h1 { font-size:clamp(2rem,4vw,3.7rem); line-height:1; margin:.35rem 0 .6rem; }
-    .hero p { color:var(--muted) !important; max-width:780px; }
-    .metric-card { background:rgba(255,255,255,.86); border:1px solid var(--line); box-shadow:0 8px 24px rgba(31,25,12,.07); padding:1rem 1.1rem; border-radius:10px; min-height:105px; }
-    .metric-label { color:var(--muted) !important; font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
-    .metric-value { color:var(--ink) !important; font:700 1.9rem 'Space Grotesk'; margin-top:.35rem; }
-    [data-testid="stMetric"] { color:var(--ink) !important; }
-    [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p,
-    [data-testid="stMetricValue"], [data-testid="stMetricValue"] div,
-    [data-testid="stMetricDelta"] { color:var(--ink) !important; }
-    [data-testid="stMetricLabel"] { font-weight:600; }
-    [data-testid="stMetricValue"] { font-family:'Space Grotesk',sans-serif; }
-    .note { background:#fff8e8; border:1px solid #e7c978; border-left:4px solid var(--gold); padding:.8rem 1rem; color:#5a4517; border-radius:8px; }
-    .section-kicker { color:var(--teal); font-size:.75rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
-    [data-testid="stDataFrame"], [data-testid="stArrowVegaLiteChart"] { animation:rise-in .5s ease-out both; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+    
+    :root { 
+        --bg-primary: #020617; 
+        --bg-secondary: #0f172a; 
+        --bg-card: #111827; 
+        --bg-light: #f8fafc; 
+        --text-primary: #ffffff; 
+        --text-secondary: #cbd5e1; 
+        --text-muted: #64748b; 
+        --text-dark: #0f172a; 
+        --accent: #f5c400; 
+        --accent-blue: #3b82f6; 
+        --border: #334155; 
+        --success: #22c55e; 
+        --warning: #f59e0b; 
+        --error: #ef4444; 
+    }
+
+    html, body, [class*="css"] { 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important; 
+        color: var(--text-primary) !important; 
+        background-color: var(--bg-primary);
+    }
+
+    h1, h2, h3, h4 { 
+        font-family: 'Space Grotesk', sans-serif !important; 
+        color: var(--text-primary) !important; 
+        font-weight: 700 !important;
+    }
+
+    .stApp { background-color: var(--bg-primary) !important; }
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] { 
+        background-color: var(--bg-secondary) !important; 
+        border-right: 1px solid var(--border) !important; 
+    }
+    [data-testid="stSidebar"] label { color: var(--text-primary) !important; font-weight: 500 !important; }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span { color: var(--text-secondary) !important; }
+
+    /* Sidebar Select Boxes */
+    [data-testid="stSidebar"] [data-baseweb="select"] { 
+        background-color: var(--bg-light) !important; 
+        border: 1px solid var(--border) !important; 
+        border-radius: 8px !important;
+    }
+    [data-testid="stSidebar"] [data-baseweb="select"] div, 
+    [data-testid="stSidebar"] [data-baseweb="select"] input, 
+    [data-testid="stSidebar"] [data-baseweb="select"] span { 
+        color: var(--text-dark) !important; 
+        font-weight: 500 !important;
+    }
+
+    /* Sidebar Buttons */
+    [data-testid="stSidebar"] button { 
+        background-color: var(--bg-card) !important; 
+        color: var(--text-primary) !important; 
+        border: 1px solid var(--border) !important; 
+        border-radius: 8px !important;
+        transition: all 0.2s ease;
+    }
+    [data-testid="stSidebar"] button:hover { border-color: var(--accent) !important; background-color: #1e293b !important; }
+
+    /* Main Content Styling */
+    .block-container { padding-top: 2rem !important; padding-bottom: 3rem !important; }
+    
+    .hero { 
+        padding: 2rem 0; 
+        border-bottom: 1px solid var(--border); 
+        margin-bottom: 2rem; 
+    }
+    .eyebrow { 
+        color: var(--accent) !important; 
+        font-size: 0.875rem; 
+        font-weight: 700; 
+        letter-spacing: 0.1em; 
+        text-transform: uppercase; 
+        margin-bottom: 0.5rem;
+    }
+    .hero h1 { 
+        font-size: 3rem !important; 
+        line-height: 1.2 !important; 
+        margin: 0 0 1rem 0 !important; 
+        color: var(--text-primary) !important;
+    }
+    .hero p { 
+        color: var(--text-secondary) !important; 
+        font-size: 1.125rem !important; 
+        max-width: 800px; 
+        line-height: 1.6 !important;
+    }
+
+    /* Metric Cards */
+    .metric-card { 
+        background: var(--bg-card) !important; 
+        border: 1px solid var(--border) !important; 
+        padding: 1.5rem !important; 
+        border-radius: 12px !important; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .metric-card:hover { transform: translateY(-4px); border-color: var(--accent-blue) !important; }
+    .metric-label { 
+        color: var(--text-muted) !important; 
+        font-size: 0.75rem !important; 
+        text-transform: uppercase !important; 
+        letter-spacing: 0.05em !important; 
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    .metric-value { 
+        color: var(--text-primary) !important; 
+        font-family: 'Space Grotesk', sans-serif !important; 
+        font-size: 2rem !important; 
+        font-weight: 700 !important; 
+    }
+
+    /* Employee Profile Metrics */
+    [data-testid="stMetric"] { 
+        background: var(--bg-card) !important; 
+        border: 1px solid var(--border) !important; 
+        padding: 1rem !important; 
+        border-radius: 12px !important; 
+    }
+    [data-testid="stMetricLabel"] { color: var(--text-secondary) !important; font-weight: 500 !important; }
+    [data-testid="stMetricValue"] { color: var(--text-primary) !important; font-weight: 700 !important; }
+
+    .note { 
+        background: #1e293b !important; 
+        border: 1px solid var(--border) !important; 
+        border-left: 4px solid var(--accent) !important; 
+        padding: 1rem !important; 
+        color: #ffffff !important; 
+        border-radius: 8px !important; 
+        font-weight: 500 !important;
+    }
+    .section-kicker { 
+        color: var(--accent) !important; 
+        font-size: 0.75rem !important; 
+        font-weight: 700 !important; 
+        letter-spacing: 0.1em !important; 
+        text-transform: uppercase !important; 
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Tables and Dataframes */
+    [data-testid="stDataFrame"] { 
+        border: 1px solid var(--border) !important; 
+        border-radius: 12px !important; 
+        overflow: hidden !important;
+    }
+
+    /* Dropdown List Fix */
+    div[data-baseweb="select"] ul { background-color: var(--bg-secondary) !important; color: var(--text-primary) !important; }
+    div[data-baseweb="select"] li { color: var(--text-primary) !important; background-color: var(--bg-secondary) !important; }
+    div[data-baseweb="select"] li:hover { background-color: var(--bg-card) !important; color: var(--accent) !important; }
+    [data-baseweb="select"] [role="listbox"] { background-color: var(--bg-secondary) !important; }
+    [data-baseweb="select"] [role="option"] { background-color: var(--bg-secondary) !important; color: var(--text-primary) !important; }
+    [data-baseweb="select"] [role="option"]:hover { background-color: var(--bg-card) !important; }
+
     @keyframes rise-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    [data-testid="stDataFrame"], [data-testid="stArrowVegaLiteChart"] { animation: rise-in 0.5s ease-out both; }
     @media (prefers-reduced-motion: reduce) { *, *::before,*::after { animation-duration:.01ms !important; } }
     </style>
     """,
@@ -391,6 +526,12 @@ with st.sidebar:
 raw = load_employee_data(uploaded_file)
 data = enrich(raw)
 data, _, model_status = train_model(data)
+
+with st.sidebar:
+    # Other filters could go here (e.g., Department, Location)
+    dept_filter = st.multiselect("Filter by Department", options=sorted(data["Department"].unique()), default=sorted(data["Department"].unique()))
+    data = data[data["Department"].isin(dept_filter)]
+    st.write(f"Filtered data: {len(data)} employees")
 
 with st.sidebar:
     departments = st.multiselect("Department", sorted(data["Department"].unique()))

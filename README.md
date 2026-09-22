@@ -30,3 +30,6 @@ The app uses the bundled workbook automatically and also accepts an `.xlsx` uplo
 ## Documentation
 
 - [Full project guide](docs/ATTRITION_PROJECT_GUIDE.md)
+
+hosting link 
+https://attrition-prediction-stackly-vmqinbmosrkfv7qcmgh7g7.streamlit.app/
