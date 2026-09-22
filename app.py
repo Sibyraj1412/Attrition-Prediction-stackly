@@ -12,6 +12,11 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 st.set_page_config(page_title="Stackly Workforce Intelligence", page_icon="S", layout="wide")
 
+# Force Dark Theme globally for all users via config logic simulation
+# Since Streamlit's theme is usually set in .streamlit/config.toml, 
+# we reinforce it via CSS to ensure it looks the same for everyone.
+
+
 DATA_PATH = Path(__file__).parent / "data" / "stackly_employee_details.xlsx"
 REQUIRED_COLUMNS = {
     "Employee ID", "Full Name", "Department", "Job Title", "Email", "Phone",
@@ -44,31 +49,47 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
     
     :root { 
-        --bg-primary: #020617; 
-        --bg-secondary: #0f172a; 
-        --bg-card: #111827; 
+        --bg-primary: #090014; 
+        --bg-secondary: #12001f; 
+        --bg-card: #160020; 
         --bg-light: #f8fafc; 
         --text-primary: #ffffff; 
-        --text-secondary: #cbd5e1; 
-        --text-muted: #64748b; 
+        --text-secondary: #ffffff; 
+        --text-muted: #e2e8f0; 
         --text-dark: #0f172a; 
-        --accent: #f5c400; 
+        --accent: #facc15; 
+        --accent-purple: #7c00ff; 
+        --accent-bright: #a855f7; 
+        --accent-magenta: #ec008c; 
+        --accent-cyan: #00e5ff; 
         --accent-blue: #3b82f6; 
-        --border: #334155; 
+        --border: rgba(255,255,255,0.1); 
         --success: #22c55e; 
         --warning: #f59e0b; 
         --error: #ef4444; 
     }
 
-    html, body, [class*="css"] { 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif !important; 
-        color: var(--text-primary) !important; 
-        background-color: var(--bg-primary);
+    @keyframes gradientText {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    html, body { 
+        background-color: var(--bg-primary) !important;
+    }
+
+    .stApp { 
+        background-color: var(--bg-primary) !important; 
+    }
+
+    .stApp p, .stApp span, .stApp div, .stApp label, .stApp li { 
+        color: #ffffff !important; 
     }
 
     h1, h2, h3, h4 { 
         font-family: 'Space Grotesk', sans-serif !important; 
-        color: var(--text-primary) !important; 
+        color: #ffffff !important; 
         font-weight: 700 !important;
     }
 
@@ -76,7 +97,7 @@ st.markdown(
 
     /* Sidebar Styling */
     [data-testid="stSidebar"] { 
-        background-color: var(--bg-secondary) !important; 
+        background-color: #100018 !important; 
         border-right: 1px solid var(--border) !important; 
     }
     [data-testid="stSidebar"] label { color: var(--text-primary) !important; font-weight: 500 !important; }
@@ -97,110 +118,149 @@ st.markdown(
 
     /* Sidebar Buttons */
     [data-testid="stSidebar"] button { 
-        background-color: var(--bg-card) !important; 
+        background: linear-gradient(90deg, #7c00ff, #ec008c) !important; 
         color: var(--text-primary) !important; 
-        border: 1px solid var(--border) !important; 
+        border: none !important; 
         border-radius: 8px !important;
-        transition: all 0.2s ease;
+        font-weight: 600 !important;
+        transition: all 0.3s ease;
     }
-    [data-testid="stSidebar"] button:hover { border-color: var(--accent) !important; background-color: #1e293b !important; }
+    [data-testid="stSidebar"] button:hover { 
+        filter: brightness(1.2);
+        box-shadow: 0 0 15px rgba(124, 0, 255, 0.4);
+    }
 
-    /* Main Content Styling */
+    /* File Uploader Styling */
+    [data-testid="stFileUploader"] {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        padding: 2rem !important;
+    }
+    [data-testid="stFileUploader"] label, 
+    [data-testid="stFileUploader"] div, 
+    [data-testid="stFileUploader"] span,
+    [data-testid="stFileUploader"] p {
+        color: #facc15 !important;
+    }
+
     .block-container { padding-top: 2rem !important; padding-bottom: 3rem !important; }
     
     .hero { 
-        padding: 2rem 0; 
+        padding: 3rem 0; 
         border-bottom: 1px solid var(--border); 
         margin-bottom: 2rem; 
+        text-align: center;
+    }
+    .hero h1 { 
+        font-size: 3.5rem !important; 
+        line-height: 1.2 !important; 
+        margin: 0 0 1rem 0 !important; 
+        background: linear-gradient(90deg, #facc15, #a855f7, #00e5ff, #facc15);
+        background-size: 300% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientText 5s ease infinite;
+        font-weight: 800 !important;
     }
     .eyebrow { 
-        color: var(--accent) !important; 
+        color: #facc15 !important; 
         font-size: 0.875rem; 
         font-weight: 700; 
         letter-spacing: 0.1em; 
         text-transform: uppercase; 
         margin-bottom: 0.5rem;
     }
-    .hero h1 { 
-        font-size: 3rem !important; 
-        line-height: 1.2 !important; 
-        margin: 0 0 1rem 0 !important; 
-        color: var(--text-primary) !important;
-    }
     .hero p { 
         color: var(--text-secondary) !important; 
-        font-size: 1.125rem !important; 
+        font-size: 1.25rem !important; 
         max-width: 800px; 
+        margin: 0 auto !important;
         line-height: 1.6 !important;
     }
 
-    /* Metric Cards */
+    /* Metric Cards - Glassmorphism */
     .metric-card { 
-        background: var(--bg-card) !important; 
-        border: 1px solid var(--border) !important; 
+        background: rgba(22, 0, 32, 0.7) !important; 
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important; 
         padding: 1.5rem !important; 
-        border-radius: 12px !important; 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        border-radius: 24px !important; 
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     }
-    .metric-card:hover { transform: translateY(-4px); border-color: var(--accent-blue) !important; }
+    .metric-card:hover { 
+        transform: translateY(-10px) scale(1.02); 
+        border-color: var(--accent-purple) !important; 
+        box-shadow: 0 0 25px rgba(124, 0, 255, 0.4) !important;
+    }
     .metric-label { 
         color: var(--text-muted) !important; 
-        font-size: 0.75rem !important; 
+        font-size: 0.85rem !important; 
         text-transform: uppercase !important; 
         letter-spacing: 0.05em !important; 
-        font-weight: 600 !important;
-        margin-bottom: 0.5rem !important;
+        font-weight: 500 !important;
+        margin-bottom: 0.75rem !important;
     }
     .metric-value { 
         color: var(--text-primary) !important; 
         font-family: 'Space Grotesk', sans-serif !important; 
-        font-size: 2rem !important; 
+        font-size: 2.5rem !important; 
         font-weight: 700 !important; 
     }
 
     /* Employee Profile Metrics */
     [data-testid="stMetric"] { 
-        background: var(--bg-card) !important; 
-        border: 1px solid var(--border) !important; 
-        padding: 1rem !important; 
-        border-radius: 12px !important; 
+        background: linear-gradient(135deg, #160020, #21002f) !important; 
+        border: 1px solid rgba(168, 85, 247, 0.25) !important; 
+        padding: 1.2rem !important; 
+        border-radius: 16px !important; 
     }
     [data-testid="stMetricLabel"] { color: var(--text-secondary) !important; font-weight: 500 !important; }
     [data-testid="stMetricValue"] { color: var(--text-primary) !important; font-weight: 700 !important; }
 
     .note { 
-        background: #1e293b !important; 
+        background: #1e1030 !important; 
         border: 1px solid var(--border) !important; 
-        border-left: 4px solid var(--accent) !important; 
-        padding: 1rem !important; 
+        border-left: 4px solid var(--accent-purple) !important; 
+        padding: 1.2rem !important; 
         color: #ffffff !important; 
-        border-radius: 8px !important; 
-        font-weight: 500 !important;
+        border-radius: 12px !important; 
+        font-weight: 600 !important;
     }
     .section-kicker { 
-        color: var(--accent) !important; 
-        font-size: 0.75rem !important; 
+        color: var(--accent-cyan) !important; 
+        font-size: 0.85rem !important; 
         font-weight: 700 !important; 
         letter-spacing: 0.1em !important; 
         text-transform: uppercase !important; 
-        margin-bottom: 0.5rem !important;
+        margin-bottom: 0.75rem !important;
     }
 
     /* Tables and Dataframes */
     [data-testid="stDataFrame"] { 
         border: 1px solid var(--border) !important; 
-        border-radius: 12px !important; 
+        border-radius: 18px !important; 
         overflow: hidden !important;
+        background-color: var(--bg-card) !important;
     }
 
-    /* Dropdown List Fix */
-    div[data-baseweb="select"] ul { background-color: var(--bg-secondary) !important; color: var(--text-primary) !important; }
-    div[data-baseweb="select"] li { color: var(--text-primary) !important; background-color: var(--bg-secondary) !important; }
-    div[data-baseweb="select"] li:hover { background-color: var(--bg-card) !important; color: var(--accent) !important; }
-    [data-baseweb="select"] [role="listbox"] { background-color: var(--bg-secondary) !important; }
-    [data-baseweb="select"] [role="option"] { background-color: var(--bg-secondary) !important; color: var(--text-primary) !important; }
-    [data-baseweb="select"] [role="option"]:hover { background-color: var(--bg-card) !important; }
+    /* Multiselect Tag Styling */
+    div[data-baseweb="select"] div[role="listbox"] div {
+        background-color: var(--accent-purple) !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    div[data-baseweb="select"] div[role="listbox"] span {
+        color: white !important;
+    }
+    div[data-baseweb="select"] div[role="listbox"] button {
+        color: white !important;
+        background-color: rgba(255,255,255,0.2) !important;
+        border: none !important;
+    }
 
     @keyframes rise-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     [data-testid="stDataFrame"], [data-testid="stArrowVegaLiteChart"] { animation: rise-in 0.5s ease-out both; }
